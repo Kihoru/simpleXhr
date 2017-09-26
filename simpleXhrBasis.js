@@ -15,6 +15,7 @@ let sxhr = {},
       "MSXML2.XmlHttp.2.0",
       "Microsoft.XmlHttp"
     ];
+
 sxhr.getVersion = function() {
   for(let i=0; i<v.length;i++) {
     try{
@@ -31,18 +32,30 @@ sxhr.req = function() {
   : sxhr.getVersion();
 }
 
-sxhr.make = function(options, query, async) {
-
+sxhr.make = function(url, options, query, async) {
+  async = async === undefined ? true : async;
+  let xhr = sxhr.req();
+  xhr.open(options.method, url, async);
+  xhr.onreadystatechange = function() {
+    if(xhr.readyState == 4) options.callback();
+  };
+  if(options.method == 'POST') xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+  xhr.send(query);
 }
 
-sxhr.query = function(options, async) {
+sxhr.query = function(url, options, async) {
   let query = [];
   if(options.hasOwnProperty("datas")) {
     for(let k in options.datas) {
       query.push(encodeURIComponent(k) + "=" + encodeURIComponent(options.datas[k]));
     }
-    sxhr.make(options, query.join("&"), async)
-  }else{
-    sxhr.make(options, (query.length ? "?" + query.join("&") : ""), async);
+    let q = options.method == 'post'
+          ? query.length
+            ? query.join("&")
+            : ""
+          : query.length
+            ? "?" + query.join("&")
+            : "";
+    sxhr.make(url, options, q, async);
   }
 }
