@@ -6,20 +6,21 @@
 * taken for project base
 **/
 
-let sxhr = {},
-    v = [
-      "MSXML2.XmlHttp.6.0",
-      "MSXML2.XmlHttp.5.0",
-      "MSXML2.XmlHttp.4.0",
-      "MSXML2.XmlHttp.3.0",
-      "MSXML2.XmlHttp.2.0",
-      "Microsoft.XmlHttp"
-    ];
+let sxhr = {
+  v: [
+    "MSXML2.XmlHttp.6.0",
+    "MSXML2.XmlHttp.5.0",
+    "MSXML2.XmlHttp.4.0",
+    "MSXML2.XmlHttp.3.0",
+    "MSXML2.XmlHttp.2.0",
+    "Microsoft.XmlHttp"
+  ]
+};
 
 sxhr.getVersion = function() {
-  for(let i=0; i<v.length;i++) {
+  for(let i=0; i<sxhr.v.length;i++) {
     try{
-      return new ActiveXObject(v[i]);
+      return new ActiveXObject(sxhr.v[i]);
     } catch(e) {
       console.log(e.message);
     }
@@ -103,6 +104,9 @@ sxhr.query = function(url, options, async) {
     },
     success: function(res) {
       console.log(res);
+    },
+    error: function(error) {
+      console.log(error);
     }
   }, true);
 ///////////////
