@@ -32,12 +32,37 @@ sxhr.req = function() {
   : sxhr.getVersion();
 }
 
+sxhr.statusOk = function(status) {
+  let validStatus = [200, 201];
+  return validStatus.indexOf(status) !== -1 ? true : false;
+}
+
 sxhr.make = function(url, options, query, async) {
   async = async === undefined ? true : async;
-  let xhr = sxhr.req();
-  xhr.open(options.method, url, async);
+  let xhr = sxhr.req(), m = options.method.toUpperCase();
+  xhr.open(m, m == "GET" ? url+query : url, async);
   xhr.onreadystatechange = function() {
-    if(xhr.readyState == 4) options.callback();
+    let onErrorCallback = null, onSuccessCallback = null;
+    if(xhr.readyState == 4) {
+      if(options.hasOwnProperty("error")) {
+        onErrorCallback = options.error;
+      }else{
+        onErrorCallback = options.success;
+      }
+      if(options.hasOwnProperty("success")) {
+        onSuccessCallback = options.success;
+      }
+
+      if(onSuccessCallback && onErrorCallback) {
+        if(sxhr.statusOk(xhr.status)) {
+          onSuccessCallback(JSON.parse(xhr.response));
+        }else{
+          onErrorCallback(JSON.parse(xhr.response));
+        }
+      }else{
+        return JSON.parse(xhr.response);
+      }
+    }
   };
   if(options.method == 'POST') xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
   xhr.send(query);
@@ -49,13 +74,35 @@ sxhr.query = function(url, options, async) {
     for(let k in options.datas) {
       query.push(encodeURIComponent(k) + "=" + encodeURIComponent(options.datas[k]));
     }
-    let q = options.method == 'post'
-          ? query.length
-            ? query.join("&")
-            : ""
-          : query.length
-            ? "?" + query.join("&")
+    let q = query.length
+            ? options.method.toUpperCase() == 'POST'
+              ? query.join("&")
+              : "?" + query.join("&")
             : "";
     sxhr.make(url, options, q, async);
   }
 }
+
+// TEST CASE :
+  let url = 'https://jsonplaceholder.typicode.com/';
+
+  sxhr.query(url + "posts", {
+    method: "GET",
+    datas: { userId: 1 },
+    success: function(res) {
+      console.log(res);
+    }
+  }, true);
+
+  sxhr.query(url + "posts", {
+    method: "POST",
+    datas: {
+      title: 'foo',
+      body: 'bar',
+      userId: 1
+    },
+    success: function(res) {
+      console.log(res);
+    }
+  }, true);
+///////////////
