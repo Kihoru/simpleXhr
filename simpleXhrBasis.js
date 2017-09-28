@@ -17,7 +17,7 @@ let sxhr = {
   ]
 };
 
-sxhr.getVersion = function() {
+sxhr.getVersion = () => {
   for(let i=0; i<sxhr.v.length;i++) {
     try{
       return new ActiveXObject(sxhr.v[i]);
@@ -27,49 +27,57 @@ sxhr.getVersion = function() {
   }
 }
 
-sxhr.req = function() {
+sxhr.req = () => {
   return typeof XMLHttpRequest !== 'undefined'
   ? new XMLHttpRequest()
   : sxhr.getVersion();
 }
 
-sxhr.statusOk = function(status) {
+sxhr.statusOk = (status) => {
   let validStatus = [200, 201];
   return validStatus.indexOf(status) !== -1 ? true : false;
 }
 
-sxhr.make = function(url, options, query, async) {
-  async = async === undefined ? true : async;
-  let xhr = sxhr.req(), m = options.method.toUpperCase();
-  xhr.open(m, m == "GET" ? url+query : url, async);
-  xhr.onreadystatechange = function() {
-    let onErrorCallback = null, onSuccessCallback = null;
-    if(xhr.readyState == 4) {
-      if(options.hasOwnProperty("error")) {
-        onErrorCallback = options.error;
-      }else{
-        onErrorCallback = options.success;
-      }
-      if(options.hasOwnProperty("success")) {
-        onSuccessCallback = options.success;
-      }
+sxhr.resultHandler = (xhr, options) => {
+  let onErrorCallback = null, onSuccessCallback = null;
 
-      if(onSuccessCallback && onErrorCallback) {
-        if(sxhr.statusOk(xhr.status)) {
-          onSuccessCallback(JSON.parse(xhr.response));
-        }else{
-          onErrorCallback(JSON.parse(xhr.response));
-        }
+  if ( xhr.readyState == 4 ) {
+
+    if( options.hasOwnProperty("error") ) onErrorCallback = options.error;
+
+    if(options.hasOwnProperty("success")) {
+      onSuccessCallback = options.success;
+      if( !onErrorCallback ) onErrorCallback = options.success;
+    }
+
+    if(onSuccessCallback && onErrorCallback) {
+      if(sxhr.statusOk(xhr.status)) {
+        onSuccessCallback(JSON.parse(xhr.response));
       }else{
-        return JSON.parse(xhr.response);
+        onErrorCallback(JSON.parse(xhr.response));
       }
     }
+  }
+}
+
+sxhr.make = (url, options, query, async) => {
+
+  async = async === undefined ? true : async;
+
+  let xhr = sxhr.req(), m = options.method.toUpperCase();
+
+  xhr.open(m, m == "GET" ? url+query : url, async);
+
+  xhr.onreadystatechange = function() {
+    sxhr.resultHandler(xhr, options);
   };
+
   if(options.method == 'POST') xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
   xhr.send(query);
 }
 
-sxhr.query = function(url, options, async) {
+sxhr.query = (url, options, async) => {
   let query = [];
   if(options.hasOwnProperty("datas")) {
     for(let k in options.datas) {
