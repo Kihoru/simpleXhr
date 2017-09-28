@@ -1,11 +1,5 @@
 'use strict';
 
-/**
-* Basical xhr obj
-* foundable everywhere on the web.
-* taken for project base
-**/
-
 let sxhr = {
   v: [
     "MSXML2.XmlHttp.6.0",
@@ -89,19 +83,53 @@ sxhr.query = (url, options, async) => {
               : "?" + query.join("&")
             : "";
     sxhr.make(url, options, q, async);
+  }else{
+    sxhr.make(url, options, "", async);
   }
+}
+
+sxhr.get = (url, callback) => {
+  let opts = {
+    method: "GET",
+    success: callback,
+  };
+  sxhr.query(url, opts, true);
+}
+
+sxhr.post = (url, datas, callback) => {
+  sxhr.query(url, {
+    method: "POST",
+    datas: datas,
+    success: callback
+  }, true);
 }
 
 // TEST CASE :
   let url = 'https://jsonplaceholder.typicode.com/';
 
+  sxhr.get(url + "posts", (res) => {
+    console.log(res);
+  });
+
+  sxhr.get(url + "posts", (res) => {
+    console.log(res);
+  });
+
   sxhr.query(url + "posts", {
     method: "GET",
     datas: { userId: 1 },
-    success: function(res) {
+    success: (res) => {
       console.log(res);
     }
   }, true);
+
+  sxhr.post(url + "posts", {
+    title: 'foo',
+    body: 'bar',
+    userId: 1
+  }, (res) => {
+    console.log(res);
+  });
 
   sxhr.query(url + "posts", {
     method: "POST",
@@ -110,10 +138,26 @@ sxhr.query = (url, options, async) => {
       body: 'bar',
       userId: 1
     },
-    success: function(res) {
+    success: (res) => {
       console.log(res);
     },
-    error: function(error) {
+    error: (error) => {
+      console.log(error);
+    }
+  }, true);
+
+  sxhr.query(url + "posts/1", {
+    method: "PUT",
+    datas: {
+      id: 1,
+      title: 'foo',
+      body: 'pppbar',
+      userId: 1
+    },
+    success: (res) => {
+      console.log(res);
+    },
+    error: (error) => {
       console.log(error);
     }
   }, true);
